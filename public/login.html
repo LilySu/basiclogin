@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Authentication</title>
+    <style>
+      @font-face {
+        font-family: "Messina";
+        src: url("fonts/MessinaSansMonoWeb-Book.woff") format("woff");
+        font-weight: normal;
+        font-style: normal;
+      }
+
+      @font-face {
+        font-family: "Messina";
+        src: url("../fonts/MessinaSansWeb-Book.woff") format("woff");
+        font-weight: bold;
+        font-style: normal;
+      }
+
+      body {
+        font-family: "Messina", sans-serif;
+        margin: 0;
+        padding: 0;
+      }
+
+      .background-blur {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: url("homepage-background.png") no-repeat center center fixed;
+        z-index: 1;
+        filter: blur(15px);
+      }
+
+      .modal {
+        display: block;
+        position: fixed;
+        z-index: 2;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.01);
+      }
+
+      .modal-content {
+        background-color: rgba(237, 237, 237, 0.946);
+        margin: 15% auto;
+        padding: 20px;
+        border: 0px solid #888;
+        width: 300px;
+        border-radius: 20px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+      }
+
+      .close {
+        color: #ffffff;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+      }
+
+      h2 {
+        text-align: center;
+        margin-bottom: 20px;
+        font-family: "Messina", sans-serif;
+      }
+
+      input[type="text"],
+      input[type="password"] {
+        width: 100%;
+        padding: 12px 20px;
+        margin: 8px 0;
+        display: inline-block;
+        border: 1px solid #ffffff;
+        border-radius: 8px;
+        box-sizing: border-box;
+        font-family: "Messina", sans-serif;
+      }
+
+      button {
+        background-color: #3478f6;
+        color: white;
+        padding: 14px 20px;
+        margin: 8px 0;
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+        width: 100%;
+        font-family: "Messina", sans-serif;
+      }
+
+      button:hover {
+        background-color: #5590ff;
+      }
+
+      #googleLoginBtn {
+        background-color: #4285F4;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        font-size: 16px;
+        cursor: pointer;
+        margin-bottom: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="blurredBackground" class="background-blur">
+      <!-- This div represents the blurred background -->
+    </div>
+
+    <div id="loginModal" class="modal">
+      <div class="modal-content">
+        <!-- This div contains the content of the pop-up modal -->
+        <span class="close">&times;</span>
+        <h2>Login</h2>
+        <button id="googleLoginBtn">Login with Google</button>
+        <hr>
+        <form id="loginForm">
+          <input type="text" id="username" placeholder="Username" required>
+          <input type="password" id="password" placeholder="Password" required>
+          <button type="submit" id="loginBtn">Login</button>
+        </form>
+        <div id="errorMessage" style="color: red; margin-top: 10px;"></div>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const modal = document.getElementById("loginModal");
+        const closeBtn = document.querySelector(".close");
+        const loginForm = document.getElementById("loginForm");
+        const googleLoginBtn = document.getElementById("googleLoginBtn");
+        const errorMessage = document.getElementById("errorMessage");
+
+        function openModal() {
+          modal.style.display = "block";
+        }
+
+        function closeModal() {
+          modal.style.display = "none";
+        }
+
+        function showError(message) {
+          errorMessage.textContent = message;
+        }
+
+        closeBtn.addEventListener("click", closeModal);
+
+        loginForm.addEventListener("submit", function (e) {
+          e.preventDefault();
+          const username = document.getElementById("username").value;
+          const password = document.getElementById("password").value;
+          
+          fetch('/login' + window.location.search, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ username, password }),
+          })
+          .then(response => {
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+          })
+          .then(data => {
+            if (data.success) {
+              window.location.href = data.redirect;
+            } else {
+              showError("Authentication failed: " + (data.message || "Unknown error"));
+            }
+          })
+          .catch((error) => {
+            console.error('Error:', error);
+            showError("An error occurred during authentication. Please try again.");
+          });
+        });
+
+        googleLoginBtn.addEventListener("click", function () {
+          window.location.href = "/auth/google" + window.location.search;
+        });
+
+        // Open the modal on page load
+        openModal();
+      });
+    </script>
+  </body>
+</html>
